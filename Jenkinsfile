@@ -2,43 +2,45 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                dir('springboot-quickstart') {  // Correct Directory!
+                    sh '''
+                    export JAVA_OPTS="-Djdk.util.zip.disableZip64ExtraFieldValidation=true"
+                    mvn clean install -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400
+                    '''
+                }
             }
         }
-
         stage('Test') {
             steps {
-                sh 'mvn test'
+                dir('springboot-quickstart') {
+                    sh 'mvn test'
+                }
             }
         }
-
         stage('Package') {
             steps {
-                sh 'mvn package'
+                dir('springboot-quickstart') {
+                    sh 'mvn package'
+                }
             }
         }
-
         stage('Deploy') {
             steps {
-                echo 'Deploy stage placeholder (to be implemented)'
+                dir('springboot-quickstart') {
+                    sh 'java -jar target/*.jar &'
+                }
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline completed successfully."
+            echo 'Pipeline Succeeded!'
         }
         failure {
-            echo "Pipeline failed."
+            echo 'Pipeline Failed.'
         }
     }
 }
